@@ -121,6 +121,27 @@ public final class ScannerViewController: UIViewController {
     private func setupViews() {
         view.backgroundColor = .darkGray
         view.layer.addSublayer(videoPreviewLayer)
+        
+        // Orientation fix ↓
+                if let connection = videoPreviewLayer.connection, connection.isVideoOrientationSupported {
+                    if let orientation = UIApplication.shared.connectedScenes
+                        .compactMap({ ($0 as? UIWindowScene)?.interfaceOrientation }).first {
+                        switch orientation {
+                        case .portrait:
+                            connection.videoOrientation = .portrait
+                        case .portraitUpsideDown:
+                            connection.videoOrientation = .portraitUpsideDown
+                        case .landscapeLeft:
+                            connection.videoOrientation = .landscapeLeft
+                        case .landscapeRight:
+                            connection.videoOrientation = .landscapeRight
+                        default:
+                            connection.videoOrientation = .portrait
+                        }
+                    }
+                }
+                // Orientation fix ↑
+        
         quadView.translatesAutoresizingMaskIntoConstraints = false
         quadView.editable = false
         view.addSubview(quadView)
