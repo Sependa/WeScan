@@ -341,21 +341,7 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
         let scaleTransform = CGAffineTransform.scaleTransform(forSize: imageSizeToUse, aspectFillInSize: quadView.bounds.size)
         let scaledImageSize = imageSize.applying(scaleTransform)
         
-        let deviceOrientationAngle: CGFloat
-        switch orientation {
-        case .portrait:
-            deviceOrientationAngle = 0
-        case .landscapeLeft:
-            deviceOrientationAngle = .pi / 2
-        case .landscapeRight:
-            deviceOrientationAngle = -.pi / 2
-        case .portraitUpsideDown:
-            deviceOrientationAngle = .pi
-        default:
-            deviceOrientationAngle = 0
-        }
-        
-        let rotationAngle = deviceOrientationAngle + (.pi / 2)
+        let rotationAngle = (UIWindowScene.rotationAngleForCurrentOrientation() ?? 0) + (.pi / 2)
         let rotationTransform = CGAffineTransform(rotationAngle: rotationAngle)
         
         let imageBounds = CGRect(origin: .zero, size: scaledImageSize).applying(rotationTransform)

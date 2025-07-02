@@ -237,3 +237,13 @@ extension Quadrilateral: Equatable {
             && lhs.bottomLeft == rhs.bottomLeft
     }
 }
+
+extension Quadrilateral {
+    func rotated(toMatchRotatedImageFrom originalSize: CGSize, to newSize: CGSize, by angle: CGFloat) -> Quadrilateral {
+        var transform = CGAffineTransform.identity
+        transform = transform.translatedBy(x: newSize.width / 2, y: newSize.height / 2)
+        transform = transform.rotated(by: angle)
+        transform = transform.translatedBy(x: -originalSize.width / 2, y: -originalSize.height / 2)
+        return self.applying(transform)
+    }
+}

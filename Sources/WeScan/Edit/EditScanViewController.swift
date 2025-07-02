@@ -68,37 +68,14 @@ final class EditScanViewController: UIViewController {
     // MARK: - Life Cycle
 
     init(image: UIImage, quad: Quadrilateral?, rotateImage: Bool = true) {
-        
-        if rotateImage, let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            let orientation = windowScene.interfaceOrientation
-            let angle: CGFloat
-
-            switch orientation {
-            case .portrait: angle = 0
-            case .landscapeRight: angle = -.pi / 2
-            case .landscapeLeft: angle = .pi / 2
-            case .portraitUpsideDown: angle = .pi
-            default: angle = 0
-            }
-
-            // Rotate the image
-            let rotatedImage = image.rotated2(by: angle) ?? image
+        if rotateImage, let orientationAngle = UIWindowScene.rotationAngleForCurrentOrientation() {
+            let originalSize = image.size
+            let rotatedImage = image.rotated2(by: orientationAngle) ?? image
+            let newSize = rotatedImage.size
             self.image = rotatedImage
 
-            // Compute transform to map old quad -> new rotated image
-            let oldSize = image.size
-            let newSize = rotatedImage.size
-
-            // 1. Move to origin
-            // 2. Rotate
-            // 3. Translate to center of new image bounds
-            var transform = CGAffineTransform.identity
-            transform = transform.translatedBy(x: newSize.width / 2, y: newSize.height / 2)
-            transform = transform.rotated(by: angle)
-            transform = transform.translatedBy(x: -oldSize.width / 2, y: -oldSize.height / 2)
-
-            self.quad = (quad ?? EditScanViewController.defaultQuad(forImage: image)).applying(transform)
-
+            let initialQuad = quad ?? EditScanViewController.defaultQuad(forImage: image)
+            self.quad = initialQuad.rotated(toMatchRotatedImageFrom: originalSize, to: newSize, by: orientationAngle)
         } else {
             self.image = image
             self.quad = quad ?? EditScanViewController.defaultQuad(forImage: image)
