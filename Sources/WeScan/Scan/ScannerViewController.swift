@@ -1,4 +1,3 @@
-//
 //  ScannerViewController.swift
 //  WeScan
 //
@@ -95,6 +94,23 @@ public final class ScannerViewController: UIViewController {
         UIApplication.shared.isIdleTimerDisabled = true
 
         navigationController?.navigationBar.barStyle = .blackTranslucent
+
+        // Orientation fix: set video preview orientation after session starts
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.fixOrientation()
+        }
+    }
+    
+    private func fixOrientation() {
+        if let connection = videoPreviewLayer.connection, connection.isVideoOrientationSupported {
+            let orientation = UIApplication.shared.connectedScenes
+                .compactMap { ($0 as? UIWindowScene)?.interfaceOrientation }
+                .first ?? .portrait
+            
+            if let avOrientation = AVCaptureVideoOrientation(rawValue: orientation.rawValue) {
+                connection.videoOrientation = avOrientation
+            }
+        }
     }
 
     override public func viewDidLayoutSubviews() {
@@ -121,33 +137,22 @@ public final class ScannerViewController: UIViewController {
     private func setupViews() {
         view.backgroundColor = .darkGray
         view.layer.addSublayer(videoPreviewLayer)
-        
-        // Orientation fix ↓
-                if let connection = videoPreviewLayer.connection, connection.isVideoOrientationSupported {
-                    if let orientation = UIApplication.shared.connectedScenes
-                        .compactMap({ ($0 as? UIWindowScene)?.interfaceOrientation }).first {
-                        switch orientation {
-                        case .portrait:
-                            connection.videoOrientation = .portrait
-                        case .portraitUpsideDown:
-                            connection.videoOrientation = .portraitUpsideDown
-                        case .landscapeLeft:
-                            connection.videoOrientation = .landscapeLeft
-                        case .landscapeRight:
-                            connection.videoOrientation = .landscapeRight
-                        default:
-                            connection.videoOrientation = .portrait
-                        }
-                    }
-                }
-                // Orientation fix ↑
-        
+                
         quadView.translatesAutoresizingMaskIntoConstraints = false
         quadView.editable = false
         view.addSubview(quadView)
         view.addSubview(cancelButton)
         view.addSubview(shutterButton)
         view.addSubview(activityIndicator)
+    }
+
+    override public func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: { _ in
+            self.fixOrientation()
+            self.videoPreviewLayer.frame = self.view.layer.bounds
+            self.quadView.frame = self.view.bounds
+        })
     }
 
     private func setupNavigationBar() {
@@ -320,27 +325,48 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
 
     func captureSessionManager(_ captureSessionManager: CaptureSessionManager, didDetectQuad quad: Quadrilateral?, _ imageSize: CGSize) {
         guard let quad else {
-            // If no quad has been detected, we remove the currently displayed on on the quadView.
             quadView.removeQuadrilateral()
             return
         }
-
-        let portraitImageSize = CGSize(width: imageSize.height, height: imageSize.width)
-
-        let scaleTransform = CGAffineTransform.scaleTransform(forSize: portraitImageSize, aspectFillInSize: quadView.bounds.size)
+        
+        let orientation = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.interfaceOrientation }
+            .first ?? .portrait
+        
+        let isLandscape = (orientation == .landscapeLeft || orientation == .landscapeRight)
+        
+        // Use image size as-is in landscape, swap width/height in portrait
+        let imageSizeToUse: CGSize = isLandscape ? imageSize : CGSize(width: imageSize.height, height: imageSize.width)
+        
+        let scaleTransform = CGAffineTransform.scaleTransform(forSize: imageSizeToUse, aspectFillInSize: quadView.bounds.size)
         let scaledImageSize = imageSize.applying(scaleTransform)
-
-        let rotationTransform = CGAffineTransform(rotationAngle: CGFloat.pi / 2.0)
-
+        
+        let deviceOrientationAngle: CGFloat
+        switch orientation {
+        case .portrait:
+            deviceOrientationAngle = 0
+        case .landscapeLeft:
+            deviceOrientationAngle = .pi / 2
+        case .landscapeRight:
+            deviceOrientationAngle = -.pi / 2
+        case .portraitUpsideDown:
+            deviceOrientationAngle = .pi
+        default:
+            deviceOrientationAngle = 0
+        }
+        
+        let rotationAngle = deviceOrientationAngle + (.pi / 2)
+        let rotationTransform = CGAffineTransform(rotationAngle: rotationAngle)
+        
         let imageBounds = CGRect(origin: .zero, size: scaledImageSize).applying(rotationTransform)
-
+        
         let translationTransform = CGAffineTransform.translateTransform(fromCenterOfRect: imageBounds, toCenterOfRect: quadView.bounds)
-
+        
         let transforms = [scaleTransform, rotationTransform, translationTransform]
-
+        
         let transformedQuad = quad.applyTransforms(transforms)
-
+        
         quadView.drawQuadrilateral(quad: transformedQuad, animated: true)
     }
-
+    
 }

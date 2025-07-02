@@ -68,8 +68,42 @@ final class EditScanViewController: UIViewController {
     // MARK: - Life Cycle
 
     init(image: UIImage, quad: Quadrilateral?, rotateImage: Bool = true) {
-        self.image = rotateImage ? image.applyingPortraitOrientation() : image
-        self.quad = quad ?? EditScanViewController.defaultQuad(forImage: image)
+        
+        if rotateImage, let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            let orientation = windowScene.interfaceOrientation
+            let angle: CGFloat
+
+            switch orientation {
+            case .portrait: angle = 0
+            case .landscapeRight: angle = -.pi / 2
+            case .landscapeLeft: angle = .pi / 2
+            case .portraitUpsideDown: angle = .pi
+            default: angle = 0
+            }
+
+            // Rotate the image
+            let rotatedImage = image.rotated2(by: angle) ?? image
+            self.image = rotatedImage
+
+            // Compute transform to map old quad -> new rotated image
+            let oldSize = image.size
+            let newSize = rotatedImage.size
+
+            // 1. Move to origin
+            // 2. Rotate
+            // 3. Translate to center of new image bounds
+            var transform = CGAffineTransform.identity
+            transform = transform.translatedBy(x: newSize.width / 2, y: newSize.height / 2)
+            transform = transform.rotated(by: angle)
+            transform = transform.translatedBy(x: -oldSize.width / 2, y: -oldSize.height / 2)
+
+            self.quad = (quad ?? EditScanViewController.defaultQuad(forImage: image)).applying(transform)
+
+        } else {
+            self.image = image
+            self.quad = quad ?? EditScanViewController.defaultQuad(forImage: image)
+        }
+
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -227,4 +261,24 @@ final class EditScanViewController: UIViewController {
         return quad
     }
 
+}
+
+extension UIImage {
+    func rotated2(by radians: CGFloat) -> UIImage? {
+        let newSize = CGRect(origin: .zero, size: size)
+            .applying(CGAffineTransform(rotationAngle: radians))
+            .integral.size
+
+        UIGraphicsBeginImageContextWithOptions(newSize, false, scale)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+
+        context.translateBy(x: newSize.width / 2, y: newSize.height / 2)
+        context.rotate(by: radians)
+        draw(in: CGRect(x: -size.width / 2, y: -size.height / 2, width: size.width, height: size.height))
+
+        let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return rotatedImage
+    }
 }
