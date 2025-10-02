@@ -82,8 +82,6 @@ public final class ScannerViewController: UIViewController {
         captureSessionManager?.start()
         UIApplication.shared.isIdleTimerDisabled = true
 
-        navigationController?.navigationBar.barStyle = .blackTranslucent
-
         // Orientation fix: set video preview orientation after session starts
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.fixOrientation()
@@ -148,6 +146,16 @@ public final class ScannerViewController: UIViewController {
     }
 
     private func setupNavigationBar() {
+        navigationController?.navigationBar.isTranslucent = true
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        
         // Left: plain "x" using SF Symbol to match simple icon style (no circular background)
         let closeImage = UIImage(systemName: "xmark")
         navigationItem.leftBarButtonItem = UIBarButtonItem(
@@ -158,26 +166,25 @@ public final class ScannerViewController: UIViewController {
         )
         navigationItem.leftBarButtonItem?.tintColor = .systemBlue
 
-        /*
+        // Ensure large titles don't hide or replace the titleView on this screen
+        navigationItem.largeTitleDisplayMode = .never
+
         let seeContactsButton = UIButton(type: .system)
         seeContactsButton.setTitle("See Contacts", for: .normal)
         seeContactsButton.setTitleColor(.white, for: .normal)
         seeContactsButton.backgroundColor = .systemBlue
         seeContactsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         seeContactsButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
-        seeContactsButton.layer.cornerRadius = 8
+        seeContactsButton.layer.cornerRadius = 22
         seeContactsButton.layer.masksToBounds = true
         seeContactsButton.addTarget(self, action: #selector(seeContactsTapped), for: .touchUpInside)
+        seeContactsButton.sizeToFit()
 
-        let container = UIView()
-        seeContactsButton.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(seeContactsButton)
-        NSLayoutConstraint.activate([
-            seeContactsButton.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            seeContactsButton.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-        ])
-        navigationItem.titleView = container
-         */
+        var buttonFrame = seeContactsButton.frame
+        buttonFrame.size.height = 44
+        seeContactsButton.frame = buttonFrame
+        
+        navigationItem.titleView = seeContactsButton
 
         // Right: Flash button (plain SF Symbol)
         navigationItem.setRightBarButton(flashButton, animated: false)
@@ -302,12 +309,12 @@ public final class ScannerViewController: UIViewController {
 
     @objc private func cancelImageScannerController() {
         guard let imageScannerController = navigationController as? ImageScannerController else { return }
-        imageScannerController.imageScannerDelegate?.imageScannerControllerDidCancel(imageScannerController)
+        imageScannerController.imageScannerDelegate?.imageScannerControllerDidCancel(imageScannerController, fullCancel: true)
     }
 
     @objc private func seeContactsTapped() {
-        // Intentionally does nothing per requirement.
-        // You can implement navigation or callbacks here later.
+        guard let imageScannerController = navigationController as? ImageScannerController else { return }
+        imageScannerController.imageScannerDelegate?.imageScannerControllerDidCancel(imageScannerController, fullCancel: false)
     }
 }
 
@@ -369,4 +376,3 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
     }
     
 }
-

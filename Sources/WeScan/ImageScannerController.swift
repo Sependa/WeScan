@@ -24,8 +24,9 @@ public protocol ImageScannerControllerDelegate: NSObjectProtocol {
     ///
     /// - Parameters:
     ///   - scanner: The scanner controller object managing the scanning interface.
+    ///   - fullCancel: A Boolean indicating whether the user cancelled the entire scanning flow.
     /// - Discussion: Your delegate's implementation of this method should dismiss the image scanner controller.
-    func imageScannerControllerDidCancel(_ scanner: ImageScannerController)
+    func imageScannerControllerDidCancel(_ scanner: ImageScannerController, fullCancel: Bool)
 
     /// Tells the delegate that an error occurred during the user's scanning experience.
     ///
@@ -70,7 +71,8 @@ public final class ImageScannerController: UINavigationController {
         } else {
             navigationBar.tintColor = .black
         }
-        navigationBar.isTranslucent = false
+        navigationBar.isTranslucent = true
+        
         self.view.addSubview(blackFlashView)
         setupConstraints()
 
@@ -212,3 +214,4 @@ public struct ImageScannerResults {
         self.doesUserPreferEnhancedScan = doesUserPreferEnhancedScan
     }
 }
+

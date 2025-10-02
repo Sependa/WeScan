@@ -164,7 +164,7 @@ extension HomeViewController: ImageScannerControllerDelegate {
         scanner.dismiss(animated: true, completion: nil)
     }
 
-    func imageScannerControllerDidCancel(_ scanner: ImageScannerController) {
+    func imageScannerControllerDidCancel(_ scanner: ImageScannerController, fullCancel: Bool) {
         scanner.dismiss(animated: true, completion: nil)
     }
 
@@ -184,3 +184,4 @@ extension HomeViewController: UIImagePickerControllerDelegate, UINavigationContr
         present(scannerViewController, animated: true)
     }
 }
+

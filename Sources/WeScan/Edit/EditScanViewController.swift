@@ -158,7 +158,7 @@ final class EditScanViewController: UIViewController {
     // MARK: - Actions
     @objc func cancelButtonTapped() {
         if let imageScannerController = navigationController as? ImageScannerController {
-            imageScannerController.imageScannerDelegate?.imageScannerControllerDidCancel(imageScannerController)
+            imageScannerController.imageScannerDelegate?.imageScannerControllerDidCancel(imageScannerController, fullCancel: true)
         }
     }
 
@@ -259,3 +259,4 @@ extension UIImage {
         return rotatedImage
     }
 }
+
