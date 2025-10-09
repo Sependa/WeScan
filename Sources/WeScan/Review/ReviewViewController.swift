@@ -35,14 +35,16 @@ final class ReviewViewController: UIViewController {
             compatibleWith: nil
         )
         let button = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(toggleEnhancedImage))
-        button.tintColor = .white
+        // Adaptive tint for normal state
+        button.tintColor = .label
         return button
     }()
 
     private lazy var rotateButton: UIBarButtonItem = {
         let image = UIImage(systemName: "rotate.right", named: "rotate", in: Bundle(for: ScannerViewController.self), compatibleWith: nil)
         let button = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(rotateImage))
-        button.tintColor = .white
+        // Adaptive tint
+        button.tintColor = .label
         return button
     }()
 
@@ -106,7 +108,8 @@ final class ReviewViewController: UIViewController {
     private func setupToolbar() {
         guard enhancedImageIsAvailable else { return }
 
-        navigationController?.toolbar.barStyle = .blackTranslucent
+        // Use system/default appearance so it adapts to light/dark modes.
+        // If you want more control on iOS 13+, you can configure a UIToolbarAppearance here.
 
         let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
@@ -153,9 +156,9 @@ final class ReviewViewController: UIViewController {
         reloadImage()
 
         if isCurrentlyDisplayingEnhancedImage {
-            enhanceButton.tintColor = .yellow
+            enhanceButton.tintColor = .systemYellow
         } else {
-            enhanceButton.tintColor = .white
+            enhanceButton.tintColor = .label
         }
     }
 
