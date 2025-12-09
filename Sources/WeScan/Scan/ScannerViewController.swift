@@ -169,6 +169,7 @@ public final class ScannerViewController: UIViewController {
         // Ensure large titles don't hide or replace the titleView on this screen
         navigationItem.largeTitleDisplayMode = .never
 
+        // Create "See Contacts" button
         let seeContactsButton = UIButton(type: .system)
         seeContactsButton.setTitle("See Contacts", for: .normal)
         seeContactsButton.setTitleColor(.white, for: .normal)
@@ -178,13 +179,43 @@ public final class ScannerViewController: UIViewController {
         seeContactsButton.layer.cornerRadius = 22
         seeContactsButton.layer.masksToBounds = true
         seeContactsButton.addTarget(self, action: #selector(seeContactsTapped), for: .touchUpInside)
-        seeContactsButton.sizeToFit()
 
-        var buttonFrame = seeContactsButton.frame
-        buttonFrame.size.height = 44
-        seeContactsButton.frame = buttonFrame
-        
-        navigationItem.titleView = seeContactsButton
+        // Create "Add Manually" button
+        let addManuallyButton = UIButton(type: .system)
+        addManuallyButton.setTitle("Add Manually", for: .normal)
+        addManuallyButton.setTitleColor(.white, for: .normal)
+        addManuallyButton.backgroundColor = .systemBlue
+        addManuallyButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        addManuallyButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+        addManuallyButton.layer.cornerRadius = 22
+        addManuallyButton.layer.masksToBounds = true
+        addManuallyButton.addTarget(self, action: #selector(addManuallyTapped), for: .touchUpInside)
+
+        // Ensure uniform height
+        seeContactsButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        addManuallyButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
+
+        // Stack both buttons horizontally
+        let stack = UIStackView(arrangedSubviews: [seeContactsButton, addManuallyButton])
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.distribution = .fillProportionally
+
+        // Wrap in a container view to size-to-fit for titleView
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: container.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            container.bottomAnchor.constraint(equalTo: stack.bottomAnchor),
+            container.trailingAnchor.constraint(equalTo: stack.trailingAnchor)
+        ])
+
+        navigationItem.titleView = container
 
         // Right: Flash button (plain SF Symbol)
         navigationItem.setRightBarButton(flashButton, animated: false)
@@ -316,6 +347,11 @@ public final class ScannerViewController: UIViewController {
         guard let imageScannerController = navigationController as? ImageScannerController else { return }
         imageScannerController.imageScannerDelegate?.imageScannerControllerDidCancel(imageScannerController, fullCancel: false)
     }
+
+    @objc private func addManuallyTapped() {
+        guard let imageScannerController = navigationController as? ImageScannerController else { return }
+        imageScannerController.imageScannerDelegate?.imageScannerControllerDidFinishScanningWithoutResults(imageScannerController)
+    }
 }
 
 extension ScannerViewController: RectangleDetectionDelegateProtocol {
@@ -376,3 +412,4 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
     }
     
 }
+

@@ -20,6 +20,12 @@ public protocol ImageScannerControllerDelegate: NSObjectProtocol {
     /// - Discussion: Your delegate's implementation of this method should dismiss the image scanner controller.
     func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: ImageScannerResults)
 
+    /// Tells the delegate that the user finished the scanning flow without producing any results (manual add flow).
+    ///
+    /// - Parameter scanner: The scanner controller object managing the scanning interface.
+    /// - Discussion: Your delegate's implementation of this method should dismiss the image scanner controller.
+    func imageScannerControllerDidFinishScanningWithoutResults(_ scanner: ImageScannerController)
+
     /// Tells the delegate that the user cancelled the scan operation.
     ///
     /// - Parameters:
