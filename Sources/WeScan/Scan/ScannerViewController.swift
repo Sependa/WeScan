@@ -62,6 +62,11 @@ public final class ScannerViewController: UIViewController {
         title = nil
         view.backgroundColor = UIColor.black
 
+        // Make content extend under the navigation bar and home indicator
+        edgesForExtendedLayout = [.top, .bottom]
+        extendedLayoutIncludesOpaqueBars = true
+        navigationController?.navigationBar.isTranslucent = true
+
         setupViews()
         setupNavigationBar()
         setupConstraints()
@@ -169,7 +174,7 @@ public final class ScannerViewController: UIViewController {
         // Ensure large titles don't hide or replace the titleView on this screen
         navigationItem.largeTitleDisplayMode = .never
 
-        // Create "Add Manually" button (only)
+        // Create "Add Manually" button and center it as titleView
         let addManuallyButton = UIButton(type: .system)
         addManuallyButton.setTitle("Add Manually", for: .normal)
         addManuallyButton.setTitleColor(.white, for: .normal)
@@ -179,20 +184,26 @@ public final class ScannerViewController: UIViewController {
         addManuallyButton.layer.cornerRadius = 22
         addManuallyButton.layer.masksToBounds = true
         addManuallyButton.addTarget(self, action: #selector(addManuallyTapped), for: .touchUpInside)
-        addManuallyButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        addManuallyButton.translatesAutoresizingMaskIntoConstraints = false
 
-        // Wrap in a container view to size-to-fit for titleView
+        // Container used as titleView; set fixed height to align vertically with bar buttons.
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
-        addManuallyButton.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(addManuallyButton)
 
+        // Constrain the button centered within the container
         NSLayoutConstraint.activate([
-            addManuallyButton.topAnchor.constraint(equalTo: container.topAnchor),
-            addManuallyButton.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            container.bottomAnchor.constraint(equalTo: addManuallyButton.bottomAnchor),
-            container.trailingAnchor.constraint(equalTo: addManuallyButton.trailingAnchor)
+            addManuallyButton.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            addManuallyButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            addManuallyButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+
+        // Give the container a fixed height matching nav bar content height; width derives from button’s intrinsic size.
+        let fittingSize = addManuallyButton.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+        let containerWidth = max(fittingSize.width, 44)
+
+        container.widthAnchor.constraint(equalToConstant: containerWidth).isActive = true
+        container.heightAnchor.constraint(equalToConstant: 44).isActive = true
 
         navigationItem.titleView = container
 
