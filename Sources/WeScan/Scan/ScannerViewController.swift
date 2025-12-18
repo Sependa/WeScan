@@ -67,6 +67,13 @@ public final class ScannerViewController: UIViewController {
         extendedLayoutIncludesOpaqueBars = true
         navigationController?.navigationBar.isTranslucent = true
 
+        if #available(iOS 26.0, *) {
+            // No adjustment needed on newer OS versions
+        } else {
+            // Push the entire navigation bar (and title view) down so controls clear the status bar
+            navigationController?.additionalSafeAreaInsets.top += 20
+        }
+
         setupViews()
         setupNavigationBar()
         setupConstraints()
@@ -397,4 +404,3 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
     }
     
 }
-
